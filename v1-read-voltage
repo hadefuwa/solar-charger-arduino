@@ -1,0 +1,13 @@
+float solarVoltage = 0.0;
+
+void setup()
+{
+    Serial.begin(9600);
+}
+
+void loop()
+{
+    solarVoltage = analogRead(A2) * 5.0 / 1024.0;
+    Serial.print(solarVoltage * 11.132);
+    Serial.println ("V");
+}
