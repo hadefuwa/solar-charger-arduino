@@ -1,0 +1,143 @@
+/*Version 9
+ * LCD Display
+ */
+
+#include <LiquidCrystal.h>
+
+#define pwmMax 255
+
+//Global variables
+float solarVoltage = 0.0;
+float batteryVoltage = 0.0;
+int pwmPin = 6;
+LiquidCrystal lcd(12,11, 10, 5, 4, 3, 2);
+int backLight = 13;  // pin 13 will control the LCD backlight
+
+void setup()
+{
+    Serial.begin(9600);
+    pinMode(pwmPin,OUTPUT);
+    pinMode(backLight, OUTPUT);          //set pin 13 as output
+    analogWrite(backLight, 150);         //controls the backlight intensity 0-255
+    lcd.begin(16,2);                     // columns, rows. size of display
+    lcd.clear();                         // clear the screen    
+}
+
+void loop()
+{
+    lcdDisplay();
+    voltageCalculations();  //Calculates the actual values of the solar panel & battery voltages using averaging
+    batVoltMonitor();       //Conditions to check battery voltage and change duty cycle of pwm signal to MOSFET gate
+    serialMonitorText();    //Prints the values to the Serial Monitor
+    warnings();             //Writes warnings to the Serial Monitor
+}
+
+void lcdDisplay()
+{
+  lcd.setCursor(16,1); // set the cursor outside the display count
+  lcd.print(" ");      // print empty character
+  lcd.setCursor(0,0); // set the cursor at 1st col and 1st row
+  lcd.print("S:");
+  lcd.print(solarVoltage);
+  lcd.print(" B:");
+  lcd.print(batteryVoltage);
+  lcd.setCursor(0,1); // set the cursor at 1st col and 2nd row
+  // LCD will show the %charged during charging period only
+  if (batteryVoltage > 8.2)
+  {
+  lcd.print("Charged          ");
+  } 
+  if (batteryVoltage > 7.5 && batteryVoltage < 8.2)
+  {
+  lcd.print("Charging          ");
+  }
+  if (batteryVoltage > 7 && batteryVoltage < 7.5)
+  {
+  lcd.print("Low Voltage       ");
+  }
+  if (batteryVoltage < 5)
+  {
+  lcd.print("Bat Disconnected");
+  } 
+}
+
+void voltageCalculations()
+{
+    float avgBatVoltage = 0.0;
+    float avgSolVoltage = 0.0;
+    int sampleCount = 0;
+
+    //while loop to add together 10 samples of the voltages for battery & solar
+    while (sampleCount < 10) 
+    {
+      avgBatVoltage += analogRead(A2);
+      avgSolVoltage += analogRead(A3);
+      sampleCount++;
+      delay(10);
+    }
+    /* 
+     *  Takes the average of the 10 readings, multiplys it by the 5V ADC ref voltage.
+     *  Divide by 1024 because the ADC stores 1024 values of the reference voltage (1/1024) - this is the voltage we're sampling
+     *  The actual voltage is then scaled back up by the division factor of the voltage divider. (11.1)
+    */
+    batteryVoltage = (((float)avgBatVoltage / 10) * 5.0) / 1024.0 * 11.1;
+    solarVoltage = (((float)avgSolVoltage / 10) * 5.0) / 1024.0 * 11.1;
+
+    sampleCount = 0;
+    avgBatVoltage = 0.0;
+    avgSolVoltage = 0.0;
+}
+
+void batVoltMonitor()
+{
+    //Conditions to check battery voltage and change duty cycle of pwm signal to MOSFET gate
+    if (batteryVoltage > 8.2)
+    {
+      analogWrite(pwmPin, pwmMax * 0); //0% duty cycle
+      delay(100);
+    }
+    else if (batteryVoltage > 7.5 && batteryVoltage < 8.2)
+    {
+      analogWrite(pwmPin, pwmMax * 1); //50% duty cycle - changed to 1 for testing but need to change back to 0.5
+      delay(100);
+    }
+    else if (batteryVoltage < 7.5)
+    {
+      analogWrite(pwmPin, pwmMax); //100% duty cycle
+      delay(100);
+    }
+}
+
+void serialMonitorText()
+{
+    Serial.print("Solar Panel: ");
+    Serial.print(solarVoltage);
+    Serial.println ("V");
+    Serial.print("Battery: ");
+    Serial.print(batteryVoltage);
+    Serial.println ("V");
+}
+
+void warnings() //displays warnings to serial monitor 
+{
+    if (batteryVoltage < 6.5 && batteryVoltage > 1)
+    {
+      Serial.println ("Warning: Low Battery Voltage");
+      delay(100);
+    }
+    if (batteryVoltage < 1)
+    {
+      Serial.println ("Error: Battery Disconnected");
+      delay(1000);
+    }
+    if (solarVoltage < 4)
+    {
+      Serial.println ("Warning: Low Solar Panel Voltage");
+      delay(100);
+    }
+    if (solarVoltage < 0.5)
+    {
+      Serial.println ("Error: Solar Panel Disconnected");
+      delay(100);
+    }
+}
