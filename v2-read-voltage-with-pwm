@@ -1,0 +1,27 @@
+float solarVoltage = 0.0;
+int pwmPin = 11;
+  
+
+void setup()
+{
+    Serial.begin(9600);
+    pinMode(pwmPin,OUTPUT);
+}
+
+void loop()
+{
+    solarVoltage = analogRead(A2) * 5.0 / 1024.0;
+    Serial.print(solarVoltage * 11.132);
+    Serial.println ("V");
+
+    for(int i=0; i<255; i++)
+    {
+      analogWrite(pwmPin, i);
+      delay(10); 
+    }
+    for(int i=255; i>0; i--)
+    {
+      analogWrite(pwmPin, i);
+      delay(10);
+    } 
+}
