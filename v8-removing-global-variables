@@ -53,17 +53,17 @@ void batVoltMonitor()
     int pwmMax = 255;
     
     //Conditions to check battery voltage and change duty cycle of pwm signal to MOSFET gate
-    if (batteryVoltage > 8)
+    if (batteryVoltage > 8.5)
     {
       analogWrite(pwmPin, pwmMax * 0);
       delay(100);
     }
-    else if (batteryVoltage > 7 && batteryVoltage < 7.99)
+    else if (batteryVoltage > 7.5 && batteryVoltage < 8.5)
     {
       analogWrite(pwmPin, pwmMax * 0.5);
       delay(100);
     }
-    else if (batteryVoltage < 6.99)
+    else if (batteryVoltage < 7.5)
     {
       analogWrite(pwmPin, pwmMax);
       delay(100);
