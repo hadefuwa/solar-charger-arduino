@@ -2,6 +2,8 @@
  * Removal of global variables
  */
 
+#define pwmMax 255
+
 //Global variables
 float solarVoltage = 0.0;
 float batteryVoltage = 0.0;
@@ -50,22 +52,20 @@ void voltageCalculations()
 
 void batVoltMonitor()
 {
-    int pwmMax = 255;
-    
     //Conditions to check battery voltage and change duty cycle of pwm signal to MOSFET gate
     if (batteryVoltage > 8.5)
     {
-      analogWrite(pwmPin, pwmMax * 0);
+      analogWrite(pwmPin, pwmMax * 0); //0% duty cycle
       delay(100);
     }
     else if (batteryVoltage > 7.5 && batteryVoltage < 8.5)
     {
-      analogWrite(pwmPin, pwmMax * 0.5);
+      analogWrite(pwmPin, pwmMax * 0.5); //50% duty cycle
       delay(100);
     }
     else if (batteryVoltage < 7.5)
     {
-      analogWrite(pwmPin, pwmMax);
+      analogWrite(pwmPin, pwmMax); //100% duty cycle
       delay(100);
     }
 }
