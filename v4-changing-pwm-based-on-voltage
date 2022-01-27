@@ -1,0 +1,45 @@
+float solarVoltage = 0.0;
+float batteryVoltage = 0.0;
+int pwmPin = 11;
+int pwmDelayTime;
+  
+
+void setup()
+{
+    Serial.begin(9600);
+    pinMode(pwmPin,OUTPUT);
+}
+
+void loop()
+{
+    solarVoltage = analogRead(A2) * 5.0 / 1024.0;
+    batteryVoltage = analogRead(A3) * 5.0 / 1024.0;
+    
+    Serial.print("Solar Panel: ");
+    Serial.print(solarVoltage * 11.132);
+    Serial.println ("V");
+    Serial.print("Battery: ");
+    Serial.print(batteryVoltage * 11.132);
+    Serial.println ("V");
+
+    if (solarVoltage > 0.3)
+    {
+      pwmDelayTime = 10;
+    }
+    
+    if (solarVoltage < 0.3)
+    {
+      pwmDelayTime = 1;
+    }
+    
+    for(int i=0; i<255; i++)
+    {
+      analogWrite(pwmPin, i);
+      delay(pwmDelayTime); 
+    }
+    for(int i=255; i>0; i--)
+    {
+      analogWrite(pwmPin, i);
+      delay(pwmDelayTime);
+    }
+}
