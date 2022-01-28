@@ -91,14 +91,14 @@ void voltageCalculations()
 void batVoltMonitor()
 {
     //Conditions to check battery voltage and change duty cycle of pwm signal to MOSFET gate
-    if (batteryVoltage > 8.2)
+    if (batteryVoltage > 8)
     {
       analogWrite(pwmPin, pwmMax * 0); //0% duty cycle
       delay(100);
     }
-    else if (batteryVoltage > 7.5 && batteryVoltage < 8.2)
+    else if (batteryVoltage > 7.5 && batteryVoltage < 8)
     {
-      analogWrite(pwmPin, pwmMax * 1); //50% duty cycle - changed to 1 for testing but need to change back to 0.5
+      analogWrite(pwmPin, pwmMax * 0.5); //50% duty cycle - changed to 1 for testing but need to change back to 0.5
       delay(100);
     }
     else if (batteryVoltage < 7.5)
@@ -123,21 +123,17 @@ void warnings() //displays warnings to serial monitor
     if (batteryVoltage < 6.5 && batteryVoltage > 1)
     {
       Serial.println ("Warning: Low Battery Voltage");
-      delay(100);
     }
     if (batteryVoltage < 1)
     {
       Serial.println ("Error: Battery Disconnected");
-      delay(1000);
     }
     if (solarVoltage < 4)
     {
       Serial.println ("Warning: Low Solar Panel Voltage");
-      delay(100);
     }
     if (solarVoltage < 0.5)
     {
       Serial.println ("Error: Solar Panel Disconnected");
-      delay(100);
     }
 }
