@@ -1,0 +1,169 @@
+/*Version 11
+ * Update to PWM Algorithm
+ * Condition structure put into program without sleep functionality yet (next version 12)
+ * **Initial Checks**
+Is battery voltage more than solar panel?
+If so, sleep the microcontroller.
+Is battery voltage more than the max voltage of the battery?
+If so, sleep the microcontroller.
+Is the battery voltage less than 60% of the max voltage?
+If so, sleep the microcontroller.
+
+**PWM Control**
+Is the battery voltage more than 95% of max?
+If yes, 50% duty cycle.
+If no, is the battery voltage more than 90% of max?
+If yes, 80% duty cycle.
+If no, 100% duty cycle.
+  */
+
+#include <LiquidCrystal.h>
+
+#define pwmMax 255
+#define batteryMaxV 8 //Max voltage for the battery
+
+//Global variables
+float solarVoltage = 0.0;
+float batteryVoltage = 0.0;
+int pwmPin = 6;
+LiquidCrystal lcd(12,11, 10, 5, 4, 3, 2);
+int backLight = 13;  // pin 13 will control the LCD backlight
+bool checksVariable = false;
+
+void setup()
+{
+    Serial.begin(9600);
+    pinMode(pwmPin,OUTPUT);
+    pinMode(backLight, OUTPUT);          //set pin 13 as output
+    analogWrite(backLight, 150);         //controls the backlight intensity 0-255
+    lcd.begin(16,2);                     // columns, rows. size of display
+    lcd.clear();                         // clear the screen    
+}
+
+void loop()
+{
+    voltageCalculations();  //Calculates the actual values of the solar panel & battery voltages using averaging
+    initialChecks();        //Carries out checks to ensure solar and battery voltage is at acceptable levels
+    pwmControl();           //Conditions to check battery voltage and change duty cycle of pwm signal to MOSFET gate
+    serialMonitorText();    //Prints the values to the Serial Monitor
+}
+
+void voltageCalculations()
+{
+    float avgBatVoltage = 0.0;
+    float avgSolVoltage = 0.0;
+    int sampleCount = 0;
+
+    //while loop to add together 10 samples of the voltages for battery & solar
+    while (sampleCount < 10) 
+    {
+      avgBatVoltage += analogRead(A2);
+      avgSolVoltage += analogRead(A3);
+      sampleCount++;
+      delay(10);
+    }
+    /* 
+     *  Takes the average of the 10 readings, multiplys it by the 5V ADC ref voltage.
+     *  Divide by 1024 because the ADC stores 1024 values of the reference voltage (1/1024) - this is the voltage we're sampling
+     *  The actual voltage is then scaled back up by the division factor of the voltage divider. (11.1)
+    */
+    batteryVoltage = (((float)avgBatVoltage / 10) * 5.0) / 1024.0 * 11.1;
+    solarVoltage = (((float)avgSolVoltage / 10) * 5.0) / 1024.0 * 11.1;
+
+    sampleCount = 0;
+    avgBatVoltage = 0.0;
+    avgSolVoltage = 0.0;
+}
+
+void initialChecks() //Conditions to check battery voltage and change duty cycle of pwm signal to MOSFET gate
+{
+    lcd.setCursor(0,1); // set the cursor at 1st col and 2nd row
+    
+    if (batteryVoltage > solarVoltage)
+    {
+      sleepFunction();
+      lcd.print("Solar V Low     ");
+      checksVariable = true;
+    }
+    else if (batteryVoltage > batteryMaxV)
+    {
+      sleepFunction();
+      lcd.print("Battery Charged     ");
+      checksVariable = true;
+    }
+    else if (batteryVoltage < (batteryMaxV*0.6))
+    {
+      sleepFunction();
+      lcd.print("Bat Low Voltage     ");
+      checksVariable = true;
+    }
+}
+
+void pwmControl()
+{
+    lcd.setCursor(16,1); // set the cursor outside the display count
+    lcd.print(" ");      // print empty character
+    lcd.setCursor(0,0); // set the cursor at 1st col and 1st row
+    lcd.print("S:");
+    lcd.print(solarVoltage);
+    lcd.print(" B:");
+    lcd.print(batteryVoltage);
+    lcd.setCursor(0,1); // set the cursor at 1st col and 2nd row
+
+    if (checksVariable = true)
+    {
+      sleepFunction();
+    }
+
+    else
+    {
+      if (batteryVoltage > (batteryMaxV*0.95)) //Float Stage Above 95% Charged
+      {
+        analogWrite(pwmPin, pwmMax * 0.5); //50% duty cycle
+        lcd.print("Float Stage     ");
+      }
+      else if (batteryVoltage > (batteryMaxV*0.9) && batteryVoltage < (batteryMaxV*0.95)) //Absorption Stage 90-95% Charged
+      {
+        analogWrite(pwmPin, pwmMax * 0.8); //80% duty cycle 
+        lcd.print("Absorption Stage     ");
+      }
+      else if (batteryVoltage < (batteryMaxV*0.9)) //Bulk Stage Below 90% Charged
+      {
+        analogWrite(pwmPin, pwmMax); //100% duty cycle
+        lcd.print("Bulk Stage     ");
+      }  
+    }
+
+}
+
+void sleepFunction()
+{
+  delay(1000); //5 second delay to be used as a stub until sleep functionality is developed and tested
+}
+
+void serialMonitorText()
+{
+    Serial.print("Solar Panel: ");
+    Serial.print(solarVoltage);
+    Serial.println ("V");
+    Serial.print("Battery: ");
+    Serial.print(batteryVoltage);
+    Serial.println ("V");
+
+    if (batteryVoltage < (batteryMaxV*0.9)) //Battery voltage is less than 90%
+    {
+      Serial.println ("Warning: Low Battery Voltage");
+    }
+    if (batteryVoltage < 1) //Battery voltage is less than 1V
+    {
+      Serial.println ("Error: Battery Disconnected");
+    }
+    if (solarVoltage < (batteryMaxV*0.5)) //Solar panel producing 50% of battery voltage is too low
+    {
+      Serial.println ("Warning: Low Solar Panel Voltage");
+    }
+    if (solarVoltage < 1) //Less than 1V = disconnected
+    {
+      Serial.println ("Error: Solar Panel Disconnected");
+    }
+}
