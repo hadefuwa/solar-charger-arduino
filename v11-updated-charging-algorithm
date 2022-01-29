@@ -149,21 +149,4 @@ void serialMonitorText()
     Serial.print("Battery: ");
     Serial.print(batteryVoltage);
     Serial.println ("V");
-
-    if (batteryVoltage < (batteryMaxV*0.9)) //Battery voltage is less than 90%
-    {
-      Serial.println ("Warning: Low Battery Voltage");
-    }
-    if (batteryVoltage < 1) //Battery voltage is less than 1V
-    {
-      Serial.println ("Error: Battery Disconnected");
-    }
-    if (solarVoltage < (batteryMaxV*0.5)) //Solar panel producing 50% of battery voltage is too low
-    {
-      Serial.println ("Warning: Low Solar Panel Voltage");
-    }
-    if (solarVoltage < 1) //Less than 1V = disconnected
-    {
-      Serial.println ("Error: Solar Panel Disconnected");
-    }
 }
