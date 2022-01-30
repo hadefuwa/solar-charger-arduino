@@ -132,7 +132,6 @@ void pwmControl()
 
 void sleepFunction()
 {
-  //delay(1000); //1 second delay to be used as a stub until sleep functionality is developed and tested
   LowPower.powerDown(SLEEP_4S, ADC_OFF, BOD_OFF); //Turn on power down mode and sleep Arduino for 4 seconds
 }
 
