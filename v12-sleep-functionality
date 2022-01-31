@@ -1,7 +1,7 @@
 /*Version 12
  * Sleeping Arduino
- * The LowPower header and LowPower.powerDown(SLEEP_4S, ADC_OFF, BOD_OFF)
- * Will sleep the Arduino for 4 seconds everytime the intial checks fail
+ * The LowPower header and LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF)
+ * Will sleep the Arduino for 8 seconds everytime the intial checks fail
 */
 
 #include <LiquidCrystal.h>
@@ -16,7 +16,6 @@ float batteryVoltage = 0.0;
 int pwmPin = 6;
 LiquidCrystal lcd(12,11, 10, 5, 4, 3, 2);
 int backLight = 13;  // pin 13 will control the LCD backlight
-bool checksVariable = false;
 
 void setup()
 {
@@ -71,23 +70,16 @@ void initialChecks() //Conditions to check battery voltage and change duty cycle
     {
       lcd.print("Solar V Low     ");
       sleepFunction();
-      checksVariable = true;
     }
     else if (batteryVoltage > batteryMaxV)
     {
       lcd.print("Battery Charged     ");
       sleepFunction();
-      checksVariable = true;
     }
     else if (batteryVoltage < (batteryMaxV*0.6))
     {
       lcd.print("Bat Low Voltage     ");
       sleepFunction();
-      checksVariable = true;
-    }
-    else
-    {
-      checksVariable = false;
     }
 }
 
@@ -102,12 +94,6 @@ void pwmControl()
     lcd.print(batteryVoltage);
     lcd.setCursor(0,1); // set the cursor at 1st col and 2nd row
 
-/*
-    if (checksVariable = true)
-    {
-      sleepFunction();
-    }
-*/
     if (batteryVoltage > (batteryMaxV*0.95)) //Float Stage Above 95% Charged
     {
       analogWrite(pwmPin, pwmMax * 0.5); //50% duty cycle
@@ -127,8 +113,7 @@ void pwmControl()
 
 void sleepFunction()
 {
-  //delay(1000); //1 second delay to be used as a stub until sleep functionality is developed and tested
-  LowPower.powerDown(SLEEP_4S, ADC_OFF, BOD_OFF); //Turn on power down mode and sleep Arduino for 4 seconds
+  LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF); //Turn on power down mode and sleep Arduino for 8 seconds
 }
 
 void serialMonitorText()
