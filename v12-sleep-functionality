@@ -1,7 +1,7 @@
 /*Version 12
  * Sleeping Arduino
- * The LowPower header and LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF)
- * Will sleep the Arduino for 8 seconds everytime the intial checks fail
+ * The LowPower header and LowPower.powerDown(SLEEP_5S, ADC_OFF, BOD_OFF)
+ * Will sleep the Arduino for 5 seconds everytime the intial checks fail
 */
 
 #include <LiquidCrystal.h>
@@ -113,7 +113,7 @@ void pwmControl()
 
 void sleepFunction()
 {
-  LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF); //Turn on power down mode and sleep Arduino for 8 seconds
+  LowPower.powerDown(SLEEP_5S, ADC_OFF, BOD_OFF); //Turn on power down mode and sleep Arduino for 5 seconds
 }
 
 void serialMonitorText()
