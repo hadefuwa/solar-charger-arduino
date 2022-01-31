@@ -69,21 +69,25 @@ void initialChecks() //Conditions to check battery voltage and change duty cycle
     
     if (batteryVoltage > solarVoltage)
     {
-      sleepFunction();
       lcd.print("Solar V Low     ");
+      sleepFunction();
       checksVariable = true;
     }
     else if (batteryVoltage > batteryMaxV)
     {
-      sleepFunction();
       lcd.print("Battery Charged     ");
+      sleepFunction();
       checksVariable = true;
     }
     else if (batteryVoltage < (batteryMaxV*0.6))
     {
-      sleepFunction();
       lcd.print("Bat Low Voltage     ");
+      sleepFunction();
       checksVariable = true;
+    }
+    else
+    {
+      checksVariable = false;
     }
 }
 
@@ -98,30 +102,27 @@ void pwmControl()
     lcd.print(batteryVoltage);
     lcd.setCursor(0,1); // set the cursor at 1st col and 2nd row
 
+/*
     if (checksVariable = true)
     {
       sleepFunction();
     }
-
-    else
+*/
+    if (batteryVoltage > (batteryMaxV*0.95)) //Float Stage Above 95% Charged
     {
-      if (batteryVoltage > (batteryMaxV*0.95)) //Float Stage Above 95% Charged
-      {
-        analogWrite(pwmPin, pwmMax * 0.5); //50% duty cycle
-        lcd.print("Float Stage     ");
-      }
-      else if (batteryVoltage > (batteryMaxV*0.9) && batteryVoltage < (batteryMaxV*0.95)) //Absorption Stage 90-95% Charged
-      {
-        analogWrite(pwmPin, pwmMax * 0.8); //80% duty cycle 
-        lcd.print("Absorption Stage     ");
-      }
-      else if (batteryVoltage < (batteryMaxV*0.9)) //Bulk Stage Below 90% Charged
-      {
-        analogWrite(pwmPin, pwmMax); //100% duty cycle
-        lcd.print("Bulk Stage     ");
-      }  
+      analogWrite(pwmPin, pwmMax * 0.5); //50% duty cycle
+      lcd.print("Float Stage     ");
     }
-
+    else if (batteryVoltage > (batteryMaxV*0.9) && batteryVoltage < (batteryMaxV*0.95)) //Absorption Stage 90-95% Charged
+    {
+      analogWrite(pwmPin, pwmMax * 0.8); //80% duty cycle 
+      lcd.print("Absorption Stage     ");
+    }
+    else if (batteryVoltage < (batteryMaxV*0.9)) //Bulk Stage Below 90% Charged
+    {
+      analogWrite(pwmPin, pwmMax); //100% duty cycle
+      lcd.print("Bulk Stage     ");
+    }  
 }
 
 void sleepFunction()
