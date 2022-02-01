@@ -98,17 +98,17 @@ void pwmControl()
     if (batteryVoltage > (batteryMaxV*0.95)) //Float Stage Above 95% Charged
     {
       analogWrite(pwmPin, pwmMax * 0.5); //50% duty cycle
-      lcd.print("Float Stage     ");
+      lcd.print("Float Stage      ");
     }
     else if (batteryVoltage > (batteryMaxV*0.9) && batteryVoltage < (batteryMaxV*0.95)) //Absorption Stage 90-95% Charged
     {
       analogWrite(pwmPin, pwmMax * 0.8); //80% duty cycle 
-      lcd.print("Absorption Stage     ");
+      lcd.print("Absorption Stage      ");
     }
     else if (batteryVoltage < (batteryMaxV*0.9)) //Bulk Stage Below 90% Charged
     {
       analogWrite(pwmPin, pwmMax); //100% duty cycle
-      lcd.print("Bulk Stage     ");
+      lcd.print("Bulk Stage       ");
     }  
 }
 
