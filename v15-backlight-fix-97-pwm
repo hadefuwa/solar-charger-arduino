@@ -1,0 +1,124 @@
+/*Version 14
+ * Added a physical pushbutton on board to reconnect backlight
+ * backlight is off by default now
+ * also removed 100% mosfet on time for 97% as max
+*/
+
+#include <LiquidCrystal.h>
+#include <LowPower.h>
+
+#define pwmMax 255
+#define batteryMaxV 8 //Max voltage for the battery
+
+//Global variables
+float solarVoltage = 0.0;
+float batteryVoltage = 0.0;
+int pwmPin = 6;
+LiquidCrystal lcd(12,11, 10, 5, 4, 3, 2);
+int backLight = 13;  // pin 13 will control the LCD backlight
+int lcdPin = 8;
+int buttonState = 0;
+
+void setup()
+{
+    Serial.begin(9600);
+    pinMode(pwmPin,OUTPUT);
+    pinMode(lcdPin,INPUT);
+    pinMode(backLight, OUTPUT);          //set pin 13 as output         
+    lcd.begin(16,2);                     // columns, rows. size of display
+    lcd.clear();                         // clear the screen    
+}
+
+void loop()
+{
+    lcdBacklight();
+    voltageCalculations();  //Calculates the actual values of the solar panel & battery voltages using averaging
+    initialChecks();        //Carries out checks to ensure solar and battery voltage is at acceptable levels
+    pwmControl();           //Conditions to check battery voltage and change duty cycle of pwm signal to MOSFET gate
+}
+
+void lcdBacklight()
+{
+    analogWrite(backLight, 255); //controls the backlight intensity 0-255
+}
+
+void voltageCalculations()
+{
+    float avgBatVoltage = 0.0;
+    float avgSolVoltage = 0.0;
+    int sampleCount = 0;
+
+    //while loop to add together 10 samples of the voltages for battery & solar
+    while (sampleCount < 10) 
+    {
+      avgBatVoltage += analogRead(A2);
+      avgSolVoltage += analogRead(A3);
+      sampleCount++;
+      delay(100);
+    }
+    /* 
+     *  Takes the average of the 10 readings, multiplys it by the 5V ADC ref voltage.
+     *  Divide by 1024 because the ADC stores 1024 values of the reference voltage (1/1024) - this is the voltage we're sampling
+     *  The actual voltage is then scaled back up by the division factor of the voltage divider. (11.1)
+    */
+    batteryVoltage = (((float)avgBatVoltage / 10) * 5.0) / 1024.0 * 11.1;
+    solarVoltage = (((float)avgSolVoltage / 10) * 5.0) / 1024.0 * 11.1;
+
+    sampleCount = 0;
+    avgBatVoltage = 0.0;
+    avgSolVoltage = 0.0;
+}
+
+void initialChecks() //Conditions to check battery voltage and change duty cycle of pwm signal to MOSFET gate
+{
+    lcd.setCursor(0,1); // set the cursor at 1st col and 2nd row
+    
+    if (batteryVoltage > solarVoltage)
+    {
+      lcd.print("Solar V Low     ");
+      sleepFunction();
+    }
+    else if (batteryVoltage > batteryMaxV)
+    {
+      lcd.print("Battery Charged     ");
+      sleepFunction();
+    }
+    else if (batteryVoltage < (batteryMaxV*0.6))
+    {
+      lcd.print("Bat Low Voltage     ");
+      sleepFunction();
+    }
+}
+
+void pwmControl()
+{
+    lcd.setCursor(16,1); // set the cursor outside the display count
+    lcd.print(" ");      // print empty character
+    lcd.setCursor(0,0); // set the cursor at 1st col and 1st row
+    lcd.print("S:");
+    lcd.print(solarVoltage);
+    lcd.print(" B:");
+    lcd.print(batteryVoltage);
+    lcd.setCursor(0,1); // set the cursor at 1st col and 2nd row
+
+    if (batteryVoltage > batteryMaxV) //Float Stage Above 95% Charged
+    {
+      analogWrite(pwmPin, pwmMax * 0.5); //50% duty cycle
+      lcd.print("Float Stage      ");
+    }
+    else if (batteryVoltage > (batteryMaxV*0.9) && batteryVoltage < batteryMaxV) //Absorption Stage 90-95% Charged
+    {
+      analogWrite(pwmPin, pwmMax * 0.8); //80% duty cycle 
+      lcd.print("Absorption Stage      ");
+    }
+    else if (batteryVoltage < (batteryMaxV*0.9)) //Bulk Stage Below 90% Charged
+    {
+      analogWrite(pwmPin, pwmMax *0.97); //97% duty cycle
+      lcd.print("Bulk Stage       ");
+    }  
+}
+
+void sleepFunction()
+{
+  LowPower.powerDown(SLEEP_4S, ADC_OFF, BOD_OFF); //Turn on power down mode and sleep Arduino for 5 seconds
+}
