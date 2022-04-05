@@ -1,0 +1,66 @@
+//Global variables
+float processedVoltage2 = 0.0;
+float processedVoltage1 = 0.0;
+
+void setup()
+{
+    Serial.begin(9600);    
+}
+
+void loop()
+{
+    voltageCalculations();  //Calculates the actual values of the solar panel & battery voltages using averaging
+    
+    Serial.print("Voltage 1: ");
+    Serial.print(processedVoltage1);
+    Serial.println ("V");
+    delay(1000);
+    
+    Serial.print("Voltage 2: ");
+    Serial.print(processedVoltage2);
+    Serial.println ("V");
+    delay(1000);
+
+    float voltageAcrossR = processedVoltage2 - processedVoltage1;
+    
+    Serial.print("Voltage Across Resistor: ");
+    Serial.print(voltageAcrossR);
+    Serial.println ("V");
+    delay(1000);
+
+    float current = voltageAcrossR / 0.1;
+
+    Serial.print("Current: ");
+    Serial.print(current);
+    Serial.println ("A");
+    delay(1000);
+
+    Serial.println("_____________");
+}
+
+
+void voltageCalculations()
+{
+    float voltage1 = 0.0;
+    float voltage2 = 0.0;
+    int sampleCount = 0;
+
+    //while loop to add together 10 samples of the voltages for battery & solar
+    while (sampleCount < 10) 
+    {
+      voltage1 += analogRead(A1);
+      voltage2 += analogRead(A0);
+      sampleCount++;
+      delay(100);
+    }
+    /* 
+     *  Takes the average of the 10 readings, multiplys it by the 5V ADC ref voltage.
+     *  Divide by 1024 because the ADC stores 1024 values of the reference voltage (1/1024) - this is the voltage we're sampling
+     *  The actual voltage is then scaled back up by the division factor of the voltage divider. (11.1)
+     *  Division factor R2 / (R1 + R2)
+    */
+    processedVoltage1 = (((float)voltage1 / 10) * 5.0) / 1024.0 * 4.03;
+    processedVoltage2 = (((float)voltage2 / 10) * 5.0) / 1024.0 * 4.03;
+
+    sampleCount = 0;
+}
