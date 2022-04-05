@@ -1,4 +1,4 @@
-/*Version 14
+/*Version 15
  * Added a physical pushbutton on board to reconnect backlight
  * backlight is off by default now
  * also removed 100% mosfet on time for 97% as max
