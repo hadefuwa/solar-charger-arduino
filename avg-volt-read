@@ -1,0 +1,30 @@
+float voltReading1 = 0.0;
+float voltReading2 = 0.0;
+float volt_1 = 0.0;
+float volt_2 = 0.0;
+
+void setup()
+{
+    Serial.begin(9600);
+}
+
+void loop()
+{
+    for(int i=0;i<150;i++)
+    {
+      voltReading1+=analogRead(A0); //read the input voltage from solar panel
+      voltReading2+=analogRead(A1); // read the battery voltage
+      delay(2);
+    }
+    voltReading1=voltReading1/150;
+    voltReading2=voltReading2/150;
+    volt_1=(voltReading1 * 10.2 * 3.3)/1000;
+    volt_2=(voltReading2 * 10.2 * 3.3)/1000;
+    Serial.print("Voltage 1: ");
+    Serial.print(volt_1);
+    Serial.println ("V");
+    Serial.print("Voltage 2: ");
+    Serial.print(volt_2);
+    Serial.println ("V");
+    delay(1000);
+}
